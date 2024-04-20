@@ -6,27 +6,52 @@ import com.cpuscheduler.AlgorithmType;
 import com.cpuscheduler.App;
 import com.cpuscheduler.Utils.Process;
 import javafx.scene.paint.Color;
+import java.util.Vector;
+import com.cpuscheduler.CPU.CPUState;
 
 public class RoundRobinScheduler implements AlgorithmType{
 
-    private final Queue<Process> queue1;
     private int timeQuantum;
+    
     private CPU cpu;
-    int time;
-    private double totalTurnAroundTime, totalWaitingTime;
-    private int numOfProcesses;
+    private Vector<Process> readyQueue;
+
+    private int processesCount = 0;
+    private double totalTurnaroundTime = 0;
+    private double totalWaitingTime = 0;
+
+    private int quantumCounter = 0;
 
     public RoundRobinScheduler(int timeQuantum) {
-        this.queue1 = new LinkedList<>();
+        cpu = new CPU();
+        readyQueue = new Vector<Process>();
         this.timeQuantum = timeQuantum;
-        time = 0; 
     }
 
     @Override
     public void addProcessToReadyQueue(Process process) {
-        queue1.add(process);
-        process.setInitialBurstTime(process.getBurstTime());
-        numOfProcesses++;
+        int currentTime = App.getCurrentTime(); // Comment this line before running tests
+        switch (cpu.getState()) {
+            case IDLE:
+                if (process.getArrivalTime() <= currentTime) {
+                    cpu.hookProcess(process);
+                    cpu.switchState(CPUState.BUZY);
+                } else {
+                    hookProcessOnReadyQueue(process);
+                }
+                return;
+            case BUZY:
+                if (process.getArrivalTime() <= currentTime) {
+                    hookProcessOnReadyQueue(process);
+                }
+                return;
+            default:
+                return;
+        }
+    }
+
+    private void hookProcessOnReadyQueue(Process process) {
+        readyQueue.add(process); // In Round Robin, we add the process to the end of the queue
     }
     
     public void setQuantum(int quantum){
@@ -36,52 +61,89 @@ public class RoundRobinScheduler implements AlgorithmType{
 
     @Override
     public ExecutionResult executeProcess() {
-        return ExecutionResult.CPU_IDLE;
+        if (cpu.getState() == CPUState.IDLE) {
+            if (!hookProcessOnCPUFromReadyQueue())
+                return ExecutionResult.CPU_IDLE;
+        }
+
+        if (quantumCounter == timeQuantum) {
+            Process currentProcess = cpu.getHookedProcess();
+            cpu.unHookProcess();
+            hookProcessOnReadyQueue(currentProcess);
+            quantumCounter = 0;
+
+            if (!hookProcessOnCPUFromReadyQueue())
+                return ExecutionResult.CPU_IDLE;
+        }
+
+        cpu.getHookedProcess().runProcess(1);
+        quantumCounter++; // Increment quantum counter
+
+        increaseWaitingPeriodForProcessesInReadyQueue();
+
+        if (cpu.getHookedProcess().isFinished()) {
+            // If a process has a burst less than the qunatum, then we should reset the quantum counter
+            // when the process finishes
+            quantumCounter = 0;
+            processesCount++;
+            totalWaitingTime += cpu.getHookedProcess().getWaitingTime();
+            totalTurnaroundTime += App.getCurrentTime() - cpu.getHookedProcess().getArrivalTime() + 1;
+            return ExecutionResult.PROCESS_FINISHED;
+        }
+
+        return ExecutionResult.PROCESS_EXECUTED;
     }
 
     @Override
     public void clear_context() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'clear_context'");
+        cpu.switchState(CPUState.IDLE);
+        cpu.unHookProcess();
+    }
+
+    private boolean hookProcessOnCPUFromReadyQueue() {
+        if (readyQueue.size() == 0)
+            return false;
+
+        int processIndex = 0; // Take first process
+
+        cpu.hookProcess(readyQueue.elementAt(processIndex));
+        cpu.switchState(CPUState.BUZY);
+        readyQueue.removeElementAt(processIndex);
+
+        return true;
+    }
+
+    private void increaseWaitingPeriodForProcessesInReadyQueue() {
+        int currentTime = App.getCurrentTime();
+        for (int i = 0 ; i < readyQueue.size() ; i++) {
+            if (readyQueue.elementAt(i).getArrivalTime() <= currentTime) {
+                readyQueue.elementAt(i).wait(1);
+            }
+        }
     }
 
     @Override
     public double getAverageWaitingTime() {
-        return totalWaitingTime / (double) numOfProcesses;
+        return totalWaitingTime / (double) processesCount;
     }
+
     @Override 
     public double getAverageTurnaroundTime() {
-        return totalTurnAroundTime / (double) numOfProcesses;
+        return totalTurnaroundTime / (double) processesCount;
     }
+
     @Override
     public Process getCPUHookedProcess() {
-        return queue1.peek();
+        return cpu.getHookedProcess();
     }
 
     @Override
     public boolean isCPUBuzy() {
-        if (!queue1.isEmpty() && queue1.peek().getArrivalTime()<=App.getCurrentTime()) {
-            System.out.println("isCPUBuzy() true");
-            return true;
-        } else {
-            System.out.println("isCPUBuzy() false");
-            return false;
-        }
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        RoundRobinScheduler scheduler = new RoundRobinScheduler(2);
-        Process p1 = new Process(1, 0, 5, 1, Color.RED);
-        Process p2 = new Process(2, 1, 3, 2, Color.GREEN);
-        Process p3 = new Process(3, 2, 8, 3, Color.BLUE);
-        scheduler.addProcessToReadyQueue(p1);
-        scheduler.addProcessToReadyQueue(p2);
-        scheduler.addProcessToReadyQueue(p3);
-        scheduler.executeProcess();
+        return cpu.isBuzy();
     }
 
     @Override
     public boolean isReadyQueueEmpty() {
-        return queue1.isEmpty();
+        return readyQueue.isEmpty();
     }
 }
