@@ -16,8 +16,6 @@ public class Process {
     private boolean isPreempted = false;
 	private final Color color;
 
-    private boolean quantumExpired = false;
-
     public Process(int id, int arrivalTime, int burstTime, int priority, Color color) {
         this.id = id;
         this.arrivalTime = arrivalTime;
@@ -88,14 +86,6 @@ public class Process {
 
     public int getWaitingTime() {
         return this.waitingTime;
-    }
-
-    public void setQuantumExpired(boolean quantumExpired) {
-        this.quantumExpired = quantumExpired;
-    }
-
-    public boolean isQuantumExpired() {
-        return this.quantumExpired;
     }
 
     public void setTurnAroundTime(int turnAroundTime) { this.turnAroundTime = turnAroundTime; }
