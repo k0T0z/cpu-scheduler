@@ -14,11 +14,9 @@ public class ContinueButtonIcon extends Pane implements ButtonIcon {
         double centerY = startButtonIconCanvas.getHeight() * 0.5;
 
         GraphicsContext gc = startButtonIconCanvas.getGraphicsContext2D();
-
-        gc.setFill(Color.BLACK);
-        gc.fillPolygon(new double[] {centerX - 20.0, centerX - 20.0, centerX},
-         new double[] {centerY - 10.0, centerY + 10.0, centerY}, 3);
-        gc.fillPolygon(new double[] {centerX, centerX, centerX + 20.0},
+        
+        gc.setFill(Color.BLUE);
+        gc.fillPolygon(new double[] {centerX - 10.0, centerX - 10.0, centerX + 10.0},
          new double[] {centerY - 10.0, centerY + 10.0, centerY}, 3);
 
         getChildren().add(startButtonIconCanvas);

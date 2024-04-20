@@ -1,4 +1,4 @@
-package com.cpuscheduler.Preemptive_Priority;
+package com.cpuscheduler.Non_Preemptive_Priority;
 
 import java.util.Vector;
 
@@ -7,13 +7,14 @@ import com.cpuscheduler.App;
 import com.cpuscheduler.CPU;
 import com.cpuscheduler.CPU.CPUState;
 import com.cpuscheduler.Utils.Process;
+import com.cpuscheduler.AlgorithmType.ExecutionResult;
 
 /*
  * 
  * Range [0 - 7], with 0 as highest priority.
  * 
  */
-public class PreemptivePriority implements AlgorithmType {
+public class NonPreemptivePriority implements AlgorithmType {
     private CPU cpu;
     private Vector<Process> readyQueue;
 
@@ -25,14 +26,14 @@ public class PreemptivePriority implements AlgorithmType {
 
     private boolean isAgingEnabled = false; // this variable disables aging feature for testing purposes.
 
-    public PreemptivePriority() {
+    public NonPreemptivePriority() {
         cpu = new CPU();
         readyQueue = new Vector<Process>();
     }
 
     @Override
     public void addProcessToReadyQueue(Process process) {
-        int currentTime = App.getCurrentTime(); // Comment this line before running tests
+        int currentTime = App.getCurrentTime();
         switch (cpu.getState()) {
             case IDLE:
                 if (process.getArrivalTime() <= currentTime) {
@@ -43,33 +44,10 @@ public class PreemptivePriority implements AlgorithmType {
                 }
                 return;
             case BUZY:
-                if (process.getArrivalTime() <= currentTime) {
-                    hookProcessOnCPUIfHigherPriority(process);
-                } else {
-                    hookProcessOnReadyQueue(process);
-                }
+                hookProcessOnReadyQueue(process);
                 return;
             default:
                 return;
-        }
-    }
-
-    private void hookProcessOnCPUIfHigherPriority(Process process) {
-        /*
-         * 
-         * Here we will apply FCFS for processes with same priorities.
-         * For processes with lower priorities, just add them to the ready queue.
-         * 
-         */
-        if (process.getPriority() < cpu.getHookedProcessPriority()) {
-            cpu.getHookedProcess().setPreempted(true);
-            hookProcessOnReadyQueue(cpu.getHookedProcess());
-            cpu.switchState(CPUState.IDLE);
-            cpu.unHookProcess();
-            cpu.hookProcess(process);
-            cpu.switchState(CPUState.BUZY);
-        } else {
-            hookProcessOnReadyQueue(process);
         }
     }
 
@@ -133,8 +111,6 @@ public class PreemptivePriority implements AlgorithmType {
                 return ExecutionResult.CPU_IDLE;
         }
 
-        PreemptionContextSwitchCheck();
-
         cpu.getHookedProcess().runProcess(1);
 
         increaseWaitingPeriodForProcessesInReadyQueue();
@@ -180,14 +156,6 @@ public class PreemptivePriority implements AlgorithmType {
                     maxArrivalTimeValue = readyQueue.elementAt(i).getArrivalTime();
                 }
 
-                // If the saved process is not preempted and the current process is preempted, give the 
-                // priority to the current process.
-                if (readyQueue.elementAt(i).isPreempted() && !readyQueue.elementAt(highestPriorityProcessIndex).isPreempted()) {
-                    highestPriorityProcessIndex = i;
-                    highestPriorityProcessValue = readyQueue.elementAt(i).getPriority();
-                    maxArrivalTimeValue = readyQueue.elementAt(i).getArrivalTime();
-                }
-
                 continue;
             }
 
@@ -209,51 +177,6 @@ public class PreemptivePriority implements AlgorithmType {
         return true;
     }
 
-    public void PreemptionContextSwitchCheck() {
-        if (readyQueue.size() == 0)
-            return;
-
-        if (cpu.getState() == CPUState.IDLE)
-            return;
-
-        int maxPriorityProcessValue = cpu.getHookedProcess().getPriority();
-        int maxPriorityProcessIndex = -1;
-
-        for (int i = 0; i < readyQueue.size(); i++) {
-            int currentTime = App.getCurrentTime();
-            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
-
-            // If the process has not arrived yet, skip it.
-            if (currentArrivalTime != currentTime) {
-                continue;
-            }
-
-            // If the current process has higher priority than the saved process, give the priority to the current process.
-            if (readyQueue.elementAt(i).getPriority() < maxPriorityProcessValue) {
-                maxPriorityProcessIndex = i;
-                maxPriorityProcessValue = readyQueue.elementAt(i).getPriority();
-            }
-        }
-
-        if (maxPriorityProcessIndex == -1) {
-            return;
-        }
-
-        Process futureProcess = readyQueue.elementAt(maxPriorityProcessIndex);
-        readyQueue.removeElementAt(maxPriorityProcessIndex);
-
-        switch (cpu.getState()) {
-            case BUZY:
-                hookProcessOnCPUIfHigherPriority(futureProcess);
-                break;
-            case IDLE:
-            default:
-                break;
-        }
-
-        return;
-    }
-
     private void increaseWaitingPeriodForProcessesInReadyQueue() {
         int currentTime = App.getCurrentTime();
         for (int i = 0 ; i < readyQueue.size() ; i++) {
@@ -269,7 +192,6 @@ public class PreemptivePriority implements AlgorithmType {
         }
     }
 
-    @Override
     public double getAverageWaitingTime() {
         return totalWaitingTime / processesCount;
     }

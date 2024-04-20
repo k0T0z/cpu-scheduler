@@ -24,30 +24,26 @@ import com.cpuscheduler.App.BooleanWrapper;
 import com.cpuscheduler.App.SchedulerAlgorithm;
 import com.cpuscheduler.App.StringWrapper;
 import com.cpuscheduler.Utils.Process;
-import com.cpuscheduler.Utils.ProcessColor;
 
 public class AddProcessDialog extends Stage {
     private final Spinner<Integer> processPrioritySpinner = new Spinner<Integer>();
     private final Spinner<Integer> processBurstSpinner = new Spinner<Integer>();
-    private final ColorPicker processColorPicker = new ColorPicker(Color.RED);
     private final Spinner<Integer> processArrivalSpinner = new Spinner<Integer>();
 
     BooleanWrapper isSaved;
     StringWrapper processPriority;
     StringWrapper processBurst;
-    ProcessColor processColor;
     BooleanWrapper isFutureProcess;
     StringWrapper processArrival;
 
     private SchedulerAlgorithm algorithm;
 
     public AddProcessDialog(SchedulerAlgorithm algorithm, BooleanWrapper isSaved, StringWrapper processPriority,
-            StringWrapper processBurst, ProcessColor processColor, BooleanWrapper isFutureProcess,
+            StringWrapper processBurst, BooleanWrapper isFutureProcess,
             StringWrapper processArrival) {
         this.isSaved = isSaved;
         this.processPriority = processPriority;
         this.processBurst = processBurst;
-        this.processColor = processColor;
         this.isFutureProcess = isFutureProcess;
         this.processArrival = processArrival;
 
@@ -60,7 +56,6 @@ public class AddProcessDialog extends Stage {
                 || algorithm == SchedulerAlgorithm.NON_PREEMPTIVE_PRIORITY)
             processPriority.setValue(processPrioritySpinner.getValue().toString());
         processBurst.setValue(processBurstSpinner.getValue().toString());
-        processColor.setColor(processColorPicker.getValue());
         processArrival.setValue(processArrivalSpinner.getValue().toString());
 
         isSaved.setValue(true);
@@ -109,13 +104,6 @@ public class AddProcessDialog extends Stage {
         processBurstHBox.getChildren().addAll(processBurstLabel, processBurstSpinner);
         processBurst.setValue(processBurstSpinner.getValue().toString());
 
-        HBox processColorHBox = new HBox();
-        processColorHBox.setSpacing(20);
-        VBox.setMargin(processColorHBox, new javafx.geometry.Insets(0, 10, 20, 10));
-        Label processColorLabel = new Label("Process Color:");
-        processColorLabel.setTextAlignment(TextAlignment.CENTER);
-        processColorHBox.getChildren().addAll(processColorLabel, processColorPicker);
-
         HBox processArrivalHBox = new HBox();
         processArrivalHBox.setSpacing(20);
         VBox.setMargin(processArrivalHBox, new javafx.geometry.Insets(0, 10, 20, 10));
@@ -152,7 +140,7 @@ public class AddProcessDialog extends Stage {
         saveButton.setOnMousePressed(this::handleSaveButtonPress);
         saveButtonHBox.getChildren().add(saveButton);
 
-        mainLayout.getChildren().addAll(processBurstHBox, processColorHBox, processArrivalHBox, saveButtonHBox);
+        mainLayout.getChildren().addAll(processBurstHBox, processArrivalHBox, saveButtonHBox);
 
         Scene addProcessDialogScene = new Scene(mainLayout, 320, 240);
 

@@ -6,7 +6,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-public class DropdownButton extends ComboBox<SchedulerAlgorithm> {
+public class AlgorithmsDropdownButton extends ComboBox<SchedulerAlgorithm> {
 
     public void place(Pane layout) {
 

@@ -10,50 +10,28 @@ import com.cpuscheduler.Utils.Process;
 
 public class FirstComeFirstServed implements AlgorithmType {
     private CPU cpu;
-    private int numProcesses=0;
     private Vector<Process> readyQueue;
-    private int currentTime = 0;
-    private double totalTurnAroundTime, totalWaitingTime;
+
+    private int processesCount = 0;
+    private double totalTurnaroundTime = 0;
+    private double totalWaitingTime = 0;
 
     public CPU getCpu() {
         return cpu;
-    }
-
-    public int getCurrentTime() {
-        return currentTime;
-    }
-
-    public void setCurrentTime(int currentTime) {
-        this.currentTime = currentTime;
     }
 
     public Vector<Process> getReadyQueue() {
         return readyQueue;
     }
 
-    public Vector<Process> getQueue1() {
-        return queue1;
-    }
-
-    public Vector<Process> getQueue2() {
-        return queue2;
-    }
-
-    private Vector<Process> queue1;
-    private Vector<Process> queue2;
-
     public FirstComeFirstServed() {
         cpu = new CPU();
-        queue1 = new Vector<Process>();
-        queue2 = new Vector<Process>();
         readyQueue = new Vector<Process>();
     }
 
     @Override
     public void addProcessToReadyQueue(Process process) {
-        numProcesses++;
-        process.setInitialBurstTime(process.getBurstTime());
-        // currentTime = App.getCurrentTime();
+        int currentTime = App.getCurrentTime();
         switch (cpu.getState()) {
             case IDLE:
                 if (process.getArrivalTime() <= currentTime) {
@@ -86,118 +64,85 @@ public class FirstComeFirstServed implements AlgorithmType {
     }
 
     @Override
-    public void executeProcess() {
+    public ExecutionResult executeProcess() {
         if (cpu.getState() == CPUState.IDLE) {
             if (!hookProcessOnCPUFromReadyQueue())
-                return;
+                return ExecutionResult.CPU_IDLE;
         }
 
         cpu.getHookedProcess().runProcess(1);
-        cpu.getHookedProcess().setWaitingTime(cpu.getHookedProcess().getWaitingTime() - 1);
+
+        increaseWaitingPeriodForProcessesInReadyQueue();
 
         if (cpu.getHookedProcess().isFinished()) {
-            int completionTime = App.getLastTime() + getCPUHookedProcess().getInitialBurstTime();
-            cpu.getHookedProcess().setTurnAroundTime(completionTime - cpu.getHookedProcess().getArrivalTime());
-            totalTurnAroundTime += cpu.getHookedProcess().getTurnAroundTime();
-            cpu.getHookedProcess().setWaitingTime(cpu.getHookedProcess().getTurnAroundTime() - cpu.getHookedProcess().getInitialBurstTime());
+            processesCount++;
             totalWaitingTime += cpu.getHookedProcess().getWaitingTime();
-            // cpu.getHookedProcess().getWaitingTime();
-            cpu.switchState(CPUState.IDLE);
-            cpu.unHookProcess();
-            hookProcessOnCPUFromReadyQueue();
+            totalTurnaroundTime += App.getCurrentTime() - cpu.getHookedProcess().getArrivalTime() + 1;
+            return ExecutionResult.PROCESS_FINISHED;
         }
+
+        return ExecutionResult.PROCESS_EXECUTED;
+    }
+
+    @Override
+    public void clear_context() {
+        cpu.switchState(CPUState.IDLE);
+        cpu.unHookProcess();
     }
 
     private boolean hookProcessOnCPUFromReadyQueue() {
-        currentTime=App.getCurrentTime();
         if (readyQueue.size() == 0)
             return false;
 
-        int arrivalValue = Integer.MAX_VALUE;
-        int processIndex = -1;
+        int maxArrivalTimeValue = App.getCurrentTime();
+        int maxArrivalTimeIndex = -1;
 
         for (int i = 0; i < readyQueue.size(); i++) {
-            if (readyQueue.elementAt(i).getArrivalTime() <= currentTime
-                    && readyQueue.elementAt(i).getArrivalTime() < arrivalValue) {
-                arrivalValue = readyQueue.elementAt(i).getArrivalTime();   
-                processIndex = i;
+            int currentTime = App.getCurrentTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
+
+            // If the process has not arrived yet, skip it.
+            if (currentArrivalTime > currentTime) {
+                continue;
+            }
+
+            if (readyQueue.elementAt(i).getArrivalTime() <= maxArrivalTimeValue) {
+                maxArrivalTimeIndex = i;
+                maxArrivalTimeValue = readyQueue.elementAt(i).getArrivalTime();
             }
         }
 
-        if (arrivalValue != Integer.MAX_VALUE) {
-            cpu.hookProcess(readyQueue.elementAt(processIndex));
-            cpu.switchState(CPUState.BUZY);
-            readyQueue.removeElementAt(processIndex);
-            return true;
+        if (maxArrivalTimeIndex == -1) {
+            return false;
         }
 
-        return false;
+        cpu.hookProcess(readyQueue.elementAt(maxArrivalTimeIndex));
+        cpu.switchState(CPUState.BUZY);
+        readyQueue.removeElementAt(maxArrivalTimeIndex);
+        return true;
     }
 
+    private void increaseWaitingPeriodForProcessesInReadyQueue() {
+        int currentTime = App.getCurrentTime();
+        for (int i = 0 ; i < readyQueue.size() ; i++) {
+            if (readyQueue.elementAt(i).getArrivalTime() <= currentTime) {
+                readyQueue.elementAt(i).wait(1);
+            }
+        }
+    }
+
+    @Override
     public double getAverageWaitingTime() {
-        return totalWaitingTime / (double) numProcesses;
+        return totalWaitingTime / (double) processesCount;
     }
 
     @Override
     public double getAverageTurnaroundTime() {
-        return totalTurnAroundTime / (double) numProcesses;
-    }
-
-    @Override
-    public void checkFutureArrivalProcessesInReadyQueue() {
-        currentTime = App.getCurrentTime(); // Comment this line before running tests
-        // System.out.println("before size(): "+readyQueue.size());
-
-        if (cpu.isBuzy())
-            return;
-
-        int processIndex = -1;
-        for (int i = 0; i < readyQueue.size(); i++) {
-            if (readyQueue.elementAt(i).getArrivalTime() == currentTime) {
-                processIndex = i;
-                break;
-            }
-        }
-
-        if (processIndex != -1) {
-            Process futureProcess = readyQueue.elementAt(processIndex);
-            readyQueue.removeElementAt(processIndex);
-
-            switch (cpu.getState()) {
-                case IDLE:
-                    cpu.hookProcess(futureProcess);
-                    cpu.switchState(CPUState.BUZY);
-                    break;
-                case BUZY:
-                    hookProcessOnReadyQueue(futureProcess);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    @Override
-    public void rearrangeProcesses() {
-
+        return totalTurnaroundTime / (double) processesCount;
     }
 
     @Override
     public boolean isReadyQueueEmpty() {
         return readyQueue.isEmpty();
     }
-
-    // @Override
-    // public double getAverageWaitingTime() {
-    // // TODO Auto-generated method stub
-    // throw new UnsupportedOperationException("Unimplemented method
-    // 'getAverageWaitingTime'");
-    // }
-
-    // @Override
-    // public double getAverageTurnaroundTime() {
-    // // TODO Auto-generated method stub
-    // throw new UnsupportedOperationException("Unimplemented method
-    // 'getAverageTurnaroundTime'");
-    // }
 }

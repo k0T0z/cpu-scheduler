@@ -36,5 +36,9 @@ public class CPU {
         return this.hookedProcess.getPriority();
     }
 
+    public int getHookedProcessBurstTime() {
+        return this.hookedProcess.getBurstTime();
+    }
+
     public boolean isBuzy() { return (state == CPUState.BUZY); }
 }
