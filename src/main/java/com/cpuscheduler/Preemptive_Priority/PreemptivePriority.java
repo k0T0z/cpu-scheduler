@@ -166,7 +166,7 @@ public class PreemptivePriority implements AlgorithmType {
 
         for (int i = 0; i < readyQueue.size(); i++) {
             int currentTime = App.getCurrentTime();
-            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime() - 1; // -1 because the time starts from 0
 
             // If the process has not arrived yet, skip it.
             if (currentArrivalTime > currentTime) {

@@ -1,11 +1,8 @@
 package com.cpuscheduler.Round_Robin;
-import java.util.LinkedList;
-import java.util.Queue;
 import com.cpuscheduler.CPU;
 import com.cpuscheduler.AlgorithmType;
 import com.cpuscheduler.App;
 import com.cpuscheduler.Utils.Process;
-import javafx.scene.paint.Color;
 import java.util.Vector;
 import com.cpuscheduler.CPU.CPUState;
 
@@ -104,7 +101,24 @@ public class RoundRobinScheduler implements AlgorithmType{
         if (readyQueue.size() == 0)
             return false;
 
-        int processIndex = 0; // Take first process
+        int processIndex = -1; // Take first process
+
+        for (int i = 0; i < readyQueue.size(); i++) {
+            int currentTime = App.getCurrentTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime() - 1; // -1 because the time starts from 0
+
+            // If the process has not arrived yet, skip it.
+            if (currentArrivalTime > currentTime) {
+                continue;
+            }
+
+            processIndex = i;
+            break;
+        }
+
+        if (processIndex == -1) {
+            return false;
+        }
 
         cpu.hookProcess(readyQueue.elementAt(processIndex));
         cpu.switchState(CPUState.BUZY);

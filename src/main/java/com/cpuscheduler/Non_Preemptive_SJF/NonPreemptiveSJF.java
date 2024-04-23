@@ -2,19 +2,12 @@ package com.cpuscheduler.Non_Preemptive_SJF;
 
 import com.cpuscheduler.AlgorithmType;
 
-import java.util.TreeSet;
 import java.util.Vector;
 import com.cpuscheduler.Utils.Process;
 
-import static com.cpuscheduler.App.getCurrentTime;
-
-import java.util.Vector;
-
-import com.cpuscheduler.AlgorithmType;
 import com.cpuscheduler.App;
 import com.cpuscheduler.CPU;
 import com.cpuscheduler.CPU.CPUState;
-import com.cpuscheduler.Utils.Process;
 
 public class NonPreemptiveSJF implements AlgorithmType {
     private CPU cpu;
@@ -120,7 +113,7 @@ public class NonPreemptiveSJF implements AlgorithmType {
 
         for (int i = 0; i < readyQueue.size(); i++) {
             int currentTime = App.getCurrentTime();
-            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime() - 1; // -1 because the time starts from 0
 
             // If the process has not arrived yet, skip it.
             if (currentArrivalTime > currentTime) {

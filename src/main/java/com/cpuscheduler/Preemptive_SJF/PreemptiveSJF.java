@@ -5,15 +5,9 @@ import com.cpuscheduler.AlgorithmType;
 import java.util.Vector;
 import com.cpuscheduler.Utils.Process;
 
-import java.util.Vector;
-
-import com.cpuscheduler.AlgorithmType;
 import com.cpuscheduler.App;
 import com.cpuscheduler.CPU;
 import com.cpuscheduler.CPU.CPUState;
-import com.cpuscheduler.Utils.Process;
-
-import static com.cpuscheduler.App.getCurrentTime;
 
 public class PreemptiveSJF implements AlgorithmType {
     private CPU cpu;
@@ -138,7 +132,7 @@ public class PreemptiveSJF implements AlgorithmType {
 
         for (int i = 0; i < readyQueue.size(); i++) {
             int currentTime = App.getCurrentTime();
-            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime() - 1; // -1 because the time starts from 0
 
             // If the process has not arrived yet, skip it.
             if (currentArrivalTime > currentTime) {

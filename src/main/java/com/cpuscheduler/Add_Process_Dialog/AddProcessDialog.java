@@ -1,20 +1,14 @@
 package com.cpuscheduler.Add_Process_Dialog;
 
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -23,7 +17,6 @@ import javafx.scene.control.CheckBox;
 import com.cpuscheduler.App.BooleanWrapper;
 import com.cpuscheduler.App.SchedulerAlgorithm;
 import com.cpuscheduler.App.StringWrapper;
-import com.cpuscheduler.Utils.Process;
 
 public class AddProcessDialog extends Stage {
     private final Spinner<Integer> processPrioritySpinner = new Spinner<Integer>();
@@ -98,7 +91,7 @@ public class AddProcessDialog extends Stage {
         Label processBurstLabel = new Label("Process Burst:");
         processBurstLabel.setTextAlignment(TextAlignment.CENTER);
         SpinnerValueFactory<Integer> processBurstSpinnerFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1,
-                50, 1, 1);
+                10000, 1, 1);
         processBurstSpinner.setValueFactory(processBurstSpinnerFactory);
         processBurstSpinner.setEditable(true);
         processBurstHBox.getChildren().addAll(processBurstLabel, processBurstSpinner);
@@ -128,7 +121,7 @@ public class AddProcessDialog extends Stage {
         });
 
         SpinnerValueFactory<Integer> processArrivalSpinnerFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
-                0, 100, 0, 1);
+                0, 10000, 0, 1);
         processArrivalSpinner.setValueFactory(processArrivalSpinnerFactory);
         processArrivalSpinner.setEditable(true);
         processArrivalHBox.getChildren().addAll(processArrivalLabel, processArrivalSpinner, checkBox);

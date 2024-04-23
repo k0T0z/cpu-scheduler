@@ -94,31 +94,29 @@ public class FirstComeFirstServed implements AlgorithmType {
         if (readyQueue.size() == 0)
             return false;
 
-        int maxArrivalTimeValue = App.getCurrentTime();
-        int maxArrivalTimeIndex = -1;
+        int processIndex = -1;
 
         for (int i = 0; i < readyQueue.size(); i++) {
             int currentTime = App.getCurrentTime();
-            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime();
+            int currentArrivalTime = readyQueue.elementAt(i).getArrivalTime() - 1; // -1 because the time starts from 0
 
             // If the process has not arrived yet, skip it.
             if (currentArrivalTime > currentTime) {
                 continue;
             }
 
-            if (readyQueue.elementAt(i).getArrivalTime() <= maxArrivalTimeValue) {
-                maxArrivalTimeIndex = i;
-                maxArrivalTimeValue = readyQueue.elementAt(i).getArrivalTime();
-            }
+            processIndex = i;
+            break;
         }
 
-        if (maxArrivalTimeIndex == -1) {
+        if (processIndex == -1) {
             return false;
         }
 
-        cpu.hookProcess(readyQueue.elementAt(maxArrivalTimeIndex));
+        cpu.hookProcess(readyQueue.elementAt(processIndex));
         cpu.switchState(CPUState.BUZY);
-        readyQueue.removeElementAt(maxArrivalTimeIndex);
+        readyQueue.removeElementAt(processIndex);
+
         return true;
     }
 

@@ -23,7 +23,6 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -33,19 +32,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.Alert.AlertType;
 import com.cpuscheduler.AlgorithmType.ExecutionResult;
 import javafx.geometry.Insets;
 import java.util.Random;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * JavaFX App
@@ -141,6 +135,17 @@ public class App extends Application {
     StackPane currentProcessStackPane = null;
 
     private void handleTimelineEvent(ActionEvent event) {
+        // Kill the timer if it is instant and the algorithm is done
+        if (instantRealTimeSwitch.getValue() == InstantRealTime.INSTANT 
+            && currentSchedulerState == SchedulerState.RUNNING
+            && !algorithmType.isCPUBuzy()
+            && algorithmType.isReadyQueueEmpty()) {
+            timeline.stop();
+
+            // pause the timer
+            currentSchedulerState = SchedulerState.DONE;
+            updateLook();
+        }
 
         ExecutionResult result = algorithmType.executeProcess();
 
@@ -159,6 +164,7 @@ public class App extends Application {
                     int newProcessId = algorithmType.getCPUHookedProcess().getId();
                     Color newColor = algorithmType.getCPUHookedProcess().getColor();
                     Label label = new Label("P" + newProcessId);
+                    label.setStyle("-fx-font-size: 18pt; -fx-font-weight: bold;");
                     currentProcessRectangle = addRectangle(label, newColor);
                     currentProcessId = newProcessId;
                 }
@@ -179,6 +185,7 @@ public class App extends Application {
                     int newProcessId = algorithmType.getCPUHookedProcess().getId();
                     Color newColor = algorithmType.getCPUHookedProcess().getColor();
                     Label label = new Label("P" + newProcessId);
+                    label.setStyle("-fx-font-size: 18pt; -fx-font-weight: bold;");
                     currentProcessRectangle = addRectangle(label, newColor);
                     currentProcessId = newProcessId;
                 }
@@ -193,6 +200,7 @@ public class App extends Application {
                     int newProcessId = algorithmType.getCPUHookedProcess().getId();
                     Color newColor = algorithmType.getCPUHookedProcess().getColor();
                     Label label = new Label("P" + newProcessId);
+                    label.setStyle("-fx-font-size: 18pt; -fx-font-weight: bold;");
                     currentProcessRectangle = addRectangle(label, newColor);
                     currentProcessId = newProcessId;
                 }
@@ -213,6 +221,7 @@ public class App extends Application {
                     int newProcessId = algorithmType.getCPUHookedProcess().getId();
                     Color newColor = algorithmType.getCPUHookedProcess().getColor();
                     Label label = new Label("P" + newProcessId);
+                    label.setStyle("-fx-font-size: 18pt; -fx-font-weight: bold;");
                     currentProcessRectangle = addRectangle(label, newColor);
                     currentProcessId = newProcessId;
                 }
@@ -438,8 +447,8 @@ public class App extends Application {
         timeline.stop();
         accumulativeSeconds = 0;
         timer.reset();
-        ComboBox<SchedulerAlgorithm> source = (ComboBox<SchedulerAlgorithm>) event.getSource();
-        SchedulerAlgorithm selectedValue = source.getSelectionModel().getSelectedItem();
+        ComboBox<?> source = (ComboBox<?>) event.getSource();
+        SchedulerAlgorithm selectedValue = (SchedulerAlgorithm) source.getValue();
         switch (selectedValue) {
             case NONE:
                 processesIdTracker = 0;
@@ -507,8 +516,8 @@ public class App extends Application {
         timeline.stop();
         accumulativeSeconds = 0;
         timer.reset();
-        ComboBox<InstantRealTime> source = (ComboBox<InstantRealTime>) event.getSource();
-        InstantRealTime selectedValue = source.getSelectionModel().getSelectedItem();
+        ComboBox<?> source = (ComboBox<?>) event.getSource();
+        InstantRealTime selectedValue = (InstantRealTime) source.getValue();
         switch (selectedValue) {
             case REAL_TIME:
                 timeline = new Timeline(new KeyFrame(Duration.seconds(1), this::handleTimelineEvent));

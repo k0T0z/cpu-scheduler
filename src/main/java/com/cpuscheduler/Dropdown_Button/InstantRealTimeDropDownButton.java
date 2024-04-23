@@ -4,7 +4,6 @@ import com.cpuscheduler.App.InstantRealTime;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 
 public class InstantRealTimeDropDownButton extends ComboBox<InstantRealTime> {
 

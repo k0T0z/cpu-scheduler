@@ -3,7 +3,6 @@ package com.cpuscheduler.RRQuantumSpinBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 
 public class RRQuantumSpinBox extends Spinner<Integer> {
 
